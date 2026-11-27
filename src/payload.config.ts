@@ -1,6 +1,7 @@
 import path from 'path'
-import { buildFigmaConfig } from '@payloadcms/figma'
-import { mcpPlugin } from '@payloadcms/plugin-mcp'
+import { buildConfig } from 'payload'
+import { sqliteAdapter } from '@payloadcms/db-sqlite'
+import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { en as adminLanguage } from '@payloadcms/translations/languages/en'
 import { fileURLToPath } from 'url'
 import { Admins } from './collections/Admins'
@@ -12,34 +13,27 @@ import { Submissions } from './collections/Submissions'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
-export default buildFigmaConfig({
+export default buildConfig({
   admin: {
     user: Admins.slug,
     constrainWidth: true,
-    dashboard: {
-      widgets: [],
-      defaultLayout: [
-        { widgetSlug: 'activity', width: 'full' },
-        { widgetSlug: 'collections', width: 'full' },
-      ],
-    },
     importMap: {
       baseDir: path.resolve(dirname),
     },
   },
+  editor: lexicalEditor(),
+  db: sqliteAdapter({
+    client: {
+      url: process.env.DATABASE_URI || 'file:./sksu-makassar.db',
+    },
+  }),
+  secret: process.env.PAYLOAD_SECRET || 'sksu-disnaker-makassar-2026-rahasia',
   i18n: {
     fallbackLanguage: 'en',
-    supportedLanguages: { 'en': adminLanguage },
+    supportedLanguages: { en: adminLanguage },
   },
   collections: [Admins, Media, Folders, Tags, Submissions],
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
-  localization: {
-    locales: [{ code: 'en', label: 'English' }],
-    fallback: true,
-    defaultLocale: 'en',
-  },
-  plugins: [mcpPlugin({})],
-  figma: {},
 })

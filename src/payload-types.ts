@@ -104,12 +104,12 @@ export interface Config {
     'payload-llm-instructions': PayloadLlmInstructionsSelect<false> | PayloadLlmInstructionsSelect<true>;
   };
   db: {
-    defaultIDType: string;
+    defaultIDType: number;
   };
-  fallbackLocale: ('false' | 'none' | 'null') | false | null | 'en' | 'en'[];
+  fallbackLocale: null;
   globals: {};
   globalsSelect: {};
-  locale: 'en';
+  locale: null;
   widgets: {
     welcome: WelcomeWidget;
     collections: CollectionsWidget;
@@ -146,22 +146,35 @@ export interface AdminAuthOperations {
  * via the `definition` "admins".
  */
 export interface Admin {
-  id: string;
-  figmaHandle?: string | null;
-  figmaImageUrl?: string | null;
-  userGroups?: string[] | null;
-  makePermission?: ('view' | 'edit') | null;
-  email?: string | null;
+  id: number;
+  name: string;
+  role: 'super-admin' | 'admin';
   createdBy?: {
     relationTo: 'admins';
-    value: string | Admin;
+    value: number | Admin;
   } | null;
   updatedBy?: {
     relationTo: 'admins';
-    value: string | Admin;
+    value: number | Admin;
   } | null;
   updatedAt: string;
   createdAt: string;
+  email: string;
+  resetPasswordToken?: string | null;
+  resetPasswordExpiration?: string | null;
+  salt?: string | null;
+  hash?: string | null;
+  resetPasswordRequestedAt?: string | null;
+  loginAttempts?: number | null;
+  lockUntil?: string | null;
+  sessions?:
+    | {
+        id: string;
+        createdAt?: string | null;
+        expiresAt: string;
+      }[]
+    | null;
+  password?: string | null;
   collection: 'admins';
 }
 /**
@@ -169,19 +182,17 @@ export interface Admin {
  * via the `definition` "media".
  */
 export interface Media {
-  id: string;
+  id: number;
   alt: string;
-  _h_folders?: (string | null) | Folder;
-  _h_tags?: (string | Tag)[] | null;
-  prefix?: string | null;
-  _objectKey?: string | null;
+  _h_folders?: (number | null) | Folder;
+  _h_tags?: (number | Tag)[] | null;
   createdBy?: {
     relationTo: 'admins';
-    value: string | Admin;
+    value: number | Admin;
   } | null;
   updatedBy?: {
     relationTo: 'admins';
-    value: string | Admin;
+    value: number | Admin;
   } | null;
   updatedAt: string;
   createdAt: string;
@@ -210,16 +221,16 @@ export interface Media {
  * via the `definition` "folders".
  */
 export interface Folder {
-  id: string;
-  _h_folders?: (string | null) | Folder;
+  id: number;
+  _h_folders?: (number | null) | Folder;
   name: string;
   createdBy?: {
     relationTo: 'admins';
-    value: string | Admin;
+    value: number | Admin;
   } | null;
   updatedBy?: {
     relationTo: 'admins';
-    value: string | Admin;
+    value: number | Admin;
   } | null;
   updatedAt: string;
   createdAt: string;
@@ -231,16 +242,16 @@ export interface Folder {
  * via the `definition` "tags".
  */
 export interface Tag {
-  id: string;
-  _h_tags?: (string | null) | Tag;
+  id: number;
+  _h_tags?: (number | null) | Tag;
   name: string;
   createdBy?: {
     relationTo: 'admins';
-    value: string | Admin;
+    value: number | Admin;
   } | null;
   updatedBy?: {
     relationTo: 'admins';
-    value: string | Admin;
+    value: number | Admin;
   } | null;
   updatedAt: string;
   createdAt: string;
@@ -252,26 +263,42 @@ export interface Tag {
  * via the `definition` "submissions".
  */
 export interface Submission {
-  id: string;
-  organizationType: 'company' | 'umkm' | 'university' | 'school' | 'cooperative' | 'disability-organization' | 'other';
-  reportType: 'profile' | 'vacancies' | 'graduates' | 'bkk' | 'placement' | 'foreign-workers' | 'disability';
-  organizationName: string;
+  id: number;
+  organizationType: 'company' | 'umkm' | 'university' | 'school' | 'disability-organization' | 'other';
+  reportType: 'profile' | 'vacancies' | 'placement' | 'foreign-workers' | 'disability' | 'bkk' | 'profile-change';
   officialId: string;
+  organizationName: string;
   sector: string;
   address: string;
   district: string;
+  subDistrict: string;
   email: string;
   phone: string;
+  periodMonth: '01' | '02' | '03' | '04' | '05' | '06' | '07' | '08' | '09' | '10' | '11' | '12';
   periodYear: number;
   localWorkers?: number | null;
   foreignWorkers?: number | null;
   disabledWorkers?: number | null;
-  placementCount?: number | null;
-  vacancyTitle?: string | null;
+  vacancyItems?:
+    | {
+        positionTitle: string;
+        vacancyCount?: number | null;
+        maleCount?: number | null;
+        femaleCount?: number | null;
+        educationLevel?: ('SD/SMP' | 'SMA/SMK' | 'D3' | 'S1' | 'S2' | 'Semua Jenjang') | null;
+        disabilityInclusive?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
   vacancyCount?: number | null;
-  workersNeeded?: number | null;
-  disabilityQuota?: number | null;
   vacancyRequirements?: string | null;
+  placementType?: ('AKL' | 'AKAD' | 'AKAN' | 'AKSUS') | null;
+  placementCount?: number | null;
+  malePlaced?: number | null;
+  femalePlaced?: number | null;
+  disabilityPlaced?: number | null;
+  placementEducation?: ('SD/SMP' | 'SMA/SMK' | 'D3' | 'S1' | 'S2') | null;
+  placementLocation?: string | null;
   studyProgram?: string | null;
   graduateCount?: number | null;
   jobReadyCount?: number | null;
@@ -281,11 +308,11 @@ export interface Submission {
   status: 'submitted' | 'review' | 'verified' | 'revision';
   createdBy?: {
     relationTo: 'admins';
-    value: string | Admin;
+    value: number | Admin;
   } | null;
   updatedBy?: {
     relationTo: 'admins';
-    value: string | Admin;
+    value: number | Admin;
   } | null;
   updatedAt: string;
   createdAt: string;
@@ -295,7 +322,7 @@ export interface Submission {
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
-  id: string;
+  id: number;
   key: string;
   data:
     | {
@@ -312,32 +339,32 @@ export interface PayloadKv {
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
-  id: string;
+  id: number;
   document?:
     | ({
         relationTo: 'admins';
-        value: string | Admin;
+        value: number | Admin;
       } | null)
     | ({
         relationTo: 'media';
-        value: string | Media;
+        value: number | Media;
       } | null)
     | ({
         relationTo: 'folders';
-        value: string | Folder;
+        value: number | Folder;
       } | null)
     | ({
         relationTo: 'tags';
-        value: string | Tag;
+        value: number | Tag;
       } | null)
     | ({
         relationTo: 'submissions';
-        value: string | Submission;
+        value: number | Submission;
       } | null);
   globalSlug?: string | null;
   user: {
     relationTo: 'admins';
-    value: string | Admin;
+    value: number | Admin;
   };
   updatedAt: string;
   createdAt: string;
@@ -347,10 +374,10 @@ export interface PayloadLockedDocument {
  * via the `definition` "payload-preferences".
  */
 export interface PayloadPreference {
-  id: string;
+  id: number;
   user: {
     relationTo: 'admins';
-    value: string | Admin;
+    value: number | Admin;
   };
   key?: string | null;
   value?:
@@ -370,7 +397,7 @@ export interface PayloadPreference {
  * via the `definition` "payload-migrations".
  */
 export interface PayloadMigration {
-  id: string;
+  id: number;
   name?: string | null;
   batch?: number | null;
   updatedAt: string;
@@ -389,11 +416,11 @@ export interface PayloadLlmInstruction {
   systemInstructions?: LexicalRichText<LexicalNodes_3DE324E4> | null;
   createdBy?: {
     relationTo: 'admins';
-    value: string | Admin;
+    value: number | Admin;
   } | null;
   updatedBy?: {
     relationTo: 'admins';
-    value: string | Admin;
+    value: number | Admin;
   } | null;
   updatedAt: string;
   createdAt: string;
@@ -403,15 +430,27 @@ export interface PayloadLlmInstruction {
  * via the `definition` "admins_select".
  */
 export interface AdminsSelect<T extends boolean = true> {
-  figmaHandle?: T;
-  figmaImageUrl?: T;
-  userGroups?: T;
-  makePermission?: T;
-  email?: T;
+  name?: T;
+  role?: T;
   createdBy?: T;
   updatedBy?: T;
   updatedAt?: T;
   createdAt?: T;
+  email?: T;
+  resetPasswordToken?: T;
+  resetPasswordExpiration?: T;
+  salt?: T;
+  hash?: T;
+  resetPasswordRequestedAt?: T;
+  loginAttempts?: T;
+  lockUntil?: T;
+  sessions?:
+    | T
+    | {
+        id?: T;
+        createdAt?: T;
+        expiresAt?: T;
+      };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -421,8 +460,6 @@ export interface MediaSelect<T extends boolean = true> {
   alt?: T;
   _h_folders?: T;
   _h_tags?: T;
-  prefix?: T;
-  _objectKey?: T;
   createdBy?: T;
   updatedBy?: T;
   updatedAt?: T;
@@ -484,23 +521,39 @@ export interface TagsSelect<T extends boolean = true> {
 export interface SubmissionsSelect<T extends boolean = true> {
   organizationType?: T;
   reportType?: T;
-  organizationName?: T;
   officialId?: T;
+  organizationName?: T;
   sector?: T;
   address?: T;
   district?: T;
+  subDistrict?: T;
   email?: T;
   phone?: T;
+  periodMonth?: T;
   periodYear?: T;
   localWorkers?: T;
   foreignWorkers?: T;
   disabledWorkers?: T;
-  placementCount?: T;
-  vacancyTitle?: T;
+  vacancyItems?:
+    | T
+    | {
+        positionTitle?: T;
+        vacancyCount?: T;
+        maleCount?: T;
+        femaleCount?: T;
+        educationLevel?: T;
+        disabilityInclusive?: T;
+        id?: T;
+      };
   vacancyCount?: T;
-  workersNeeded?: T;
-  disabilityQuota?: T;
   vacancyRequirements?: T;
+  placementType?: T;
+  placementCount?: T;
+  malePlaced?: T;
+  femalePlaced?: T;
+  disabilityPlaced?: T;
+  placementEducation?: T;
+  placementLocation?: T;
   studyProgram?: T;
   graduateCount?: T;
   jobReadyCount?: T;
